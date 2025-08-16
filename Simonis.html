@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Simonis - Prochains passages</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background-color: #001f3f; /* bleu STIB */
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+  }
+  h1 {
+    margin: 20px 0;
+    font-size: 3em;
+    color: #ffcc00; /* jaune STIB */
+  }
+  table {
+    width: 90%;
+    border-collapse: collapse;
+    font-size: 2em;
+  }
+  th, td {
+    padding: 15px;
+    text-align: left;
+  }
+  th {
+    border-bottom: 2px solid #ffcc00;
+  }
+  td.line {
+    font-weight: bold;
+    font-size: 1.5em;
+    color: #ffcc00;
+  }
+  tr:nth-child(even) {
+    background-color: rgba(255,255,255,0.05);
+  }
+</style>
+</head>
+<body>
+<h1>SIMONIS</h1>
+<table id="arrivals">
+  <thead>
+    <tr>
+      <th>Ligne</th>
+      <th>Destination</th>
+      <th>Attente</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td colspan="3">Chargement...</td></tr>
+  </tbody>
+</table>
+
+<script>
+const pointid = "0471"; // Simonis
+const proxy = "https://api.allorigins.win/raw?url=";
+const stibAPI = `https://data.stib-mivb.brussels/api/explore/v2.1/catalog/datasets/waiting-time-rt-production/records?where=pointid=${pointid}&limit=10`;
+const url = proxy + encodeURIComponent(stibAPI);
+
+const tbody = document.querySelector("#arrivals tbody");
+
+async function fetchArrivals() {
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    tbody.innerHTML = "";
+    data.records.forEach(record => {
+      const fields = record.fields;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="line">${fields.line}</td>
+        <td>${fields.destination}</td>
+        <td>${fields.waitingtime} min</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='3'>Erreur de récupération</td></tr>";
+    console.error("Erreur :", err);
+  }
+}
+
+// Actualisation toutes les 20 secondes
+fetchArrivals();
+setInterval(fetchArrivals, 20000);
+</script>
+</body>
+</html>
